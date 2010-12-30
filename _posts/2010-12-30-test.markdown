@@ -1,6 +1,6 @@
 ---
 layout: post
-tile: Just a test ...
+title: Just a test ...
 ---
 
 Yeah baby!
