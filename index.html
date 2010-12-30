@@ -4,8 +4,11 @@ title: not really
 ---
 
 <div class='main'>
+  {% for post in site.posts %}
   <div class='post'>
-    <h1><a href='{{site.posts.first.url}}'>{{site.posts.first.title}}</a></h1>
-    <div class='body'>{{ site.posts.first.content }}</div>
+    <h1><a href='{{ post.url }}'>{{ post.title }}</a></h1>
+    <div class='date'>{{ post.date }}</div>
+    <div class='body'>{{ post.content }}</div>
   </div>
+  {% endfor %}
 </div>
