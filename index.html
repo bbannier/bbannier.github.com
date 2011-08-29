@@ -1,14 +1,65 @@
----
-layout: index
-title: not really
----
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="http://twitter.github.com/bootstrap/assets/css/bootstrap-1.1.1.min.css">
+    <title>Landing of The Honk</title>
+  </head>
 
-<div class='main'>
-  {% for post in site.posts %}
-  <div class='post'>
-    <h1><a href='{{ post.url }}'>{{ post.title }}</a></h1>
-    <div class='date'>{{ post.date }}</div>
-    <div class='body'>{{ post.content }}</div>
-  </div>
-  {% endfor %}
-</div>
+  <body>
+    <div class="container">
+      <h1>
+        Landing of The Honk
+        <small>Collected random stuff</small>
+      </h1>
+
+      <div class="row">
+        <div class="span4 columns">
+          <!--
+          <img src="http://www.gravatar.com/avatar/621b61c5445afea7639b4cf6bb7c455a?s=200" />
+          &nbsp;
+          -->
+        </div>
+
+        <div class="span8 columns">
+          <h2>Links</h2>
+          <dl>
+            <dt><a href="http://www.phenix.bnl.gov">PHENIX</a></dt>
+            <dd>
+            Were I do the work for my PhD.
+            <p/>
+            See my <a href="http://nagant08.physics.sunysb.edu/~honk">work homepage</a> for some related stuff.
+
+            </dd>
+
+            <dt><a href="http://github.com/bbannier">github</a> </dt>
+            <dd>
+            The dumping ground for some of my pet projects.
+            <p/>
+            Have a look at <a
+              href="http://github.com/bbannier/root.py">root.py</a> if you are into
+            <a href="http://root.cern.ch">ROOT</a> and <a
+              href="http://ipython.org">ipython</a>.
+            </dd>
+
+            <dt><a href="http://gentoo.org">Gentoo</a></dt>
+            <dd>
+            An awesome Linux distribution.
+            <p/>
+            The packages from the <a href="http://www.gentoo.org/proj/en/science/index.xml">sci overlay </a>are worth the switch alone.
+            </dd>
+          </dl>
+        </div>
+
+        <div class="span4 columns">
+          <h2>Contact info</h2>
+          I am best reached by <a href="mailto://bbannier@gmail.com">email</a>.
+          If you use GPG please encrypt for my <a href="http://pgp.mit.edu:11371/pks/lookup?op=get&search=0x563E023C5DE46D0C">key</a>.
+
+          I am often on IRC as <code>h0nk</code>.
+
+          My timezone is usually UTC-4.
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
