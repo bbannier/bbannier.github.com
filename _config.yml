@@ -5,7 +5,7 @@ url: "http://bbannier.github.io" # the base hostname & protocol for your site
 # THEME-SPECIFIC CONFIGURATION
 theme:
   # Meta
-  title: Benjamin blags
+  title: Benjamin Bannier blags
   avatar: avatar.png
   gravatar: 621b61c5445afea7639b4cf6bb7c455a # Email MD5 hash
   description: "Benjamin Bannier blogs" # used by search engines
