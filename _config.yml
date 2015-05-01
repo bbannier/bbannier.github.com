@@ -1,14 +1,14 @@
 # SITE CONFIGURATION
-baseurl: "" # the subpath of your site, e.g. /blog/
-url: "http://example.com" # the base hostname & protocol for your site
+baseurl: "/blog" # the subpath of your site, e.g. /blog/
+url: "http://bbannier.github.io" # the base hostname & protocol for your site
 
 # THEME-SPECIFIC CONFIGURATION
 theme:
   # Meta
-  title: Type Theme
+  title: Benjamin blags
   avatar: avatar.png
-  gravatar: # Email MD5 hash
-  description: "A website with blog posts and pages" # used by search engines
+  gravatar: 621b61c5445afea7639b4cf6bb7c455a # Email MD5 hash
+  description: "Benjamin Bannier blogs" # used by search engines
 
   # Header and footer text
   header_text: >
@@ -21,28 +21,28 @@ theme:
 
   # Icons
   rss: false
-  email_address: # Full email address, e.g. "sam@example.com"
+  email_address: "bbannier@gmail.com" # Full email address, e.g. "sam@example.com"
   behance:
-  bitbucket:
+  bitbucket: "honk"
   dribbble:
   facebook:
   flickr:
-  github: "rohanchandra/type-theme"
-  google_plus:
+  github: "bbannier"
+  google_plus: "u/0/+BenjaminBannier"
   instagram:
-  linkedin:  # Full URL
+  linkedin: "https://www.linkedin.com/in/bbannier" # Full URL
   pinterest:
   reddit:
   soundcloud:
-  stack_exchange:  # Full URL
+  stack_exchange: "https://stackoverflow.com/users/176922/benjamin-bannier" # Full URL
   steam:
   tumblr:
-  twitter: "twitter"
+  twitter: 
   wordpress:
   youtube:
 
   # Scripts
-  google_analytics: # Tracking ID, e.g. "UA-000000-01"
+  google_analytics: "UA-60230498-1" # Tracking ID, e.g. "UA-000000-01"
   disqus_shortname:
   katex: true # Enable if using math markup
 
