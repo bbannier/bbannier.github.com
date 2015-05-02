@@ -252,7 +252,7 @@ struct B : public A {
 4 matches.
 {% endhighlight %}
 
-which 4 finds all the {CXXMethodDecl} (two for our explicitly declared methods
+which finds 4 `CXXMethodDecl`s (two for our explicitly declared methods
 `f` and two for implicitly declared methods).
 
 We chain that with the `isVirtual` matcher to only match virtual methods,
