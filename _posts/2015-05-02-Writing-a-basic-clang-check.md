@@ -4,10 +4,9 @@ title: Writing a basic clang check
 ---
 
 [Clang](http://clang.llvm.org) provides a user-friendly framework for writing
-basic static-analysis checks.
-In this post we will see how analysis on the clang abstract syntax tree (AST)
-can be used to implement pretty powerful checks for single translation units
-pretty easily.
+basic static-analysis checks.  In this post we will see how analysis on the
+clang abstract syntax tree (AST) can be used to implement powerful checks for
+single translation units pretty easily.
 
 
 * TOC
