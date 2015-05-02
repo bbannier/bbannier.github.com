@@ -162,7 +162,7 @@ public:
 
 Here `VirtualShadowingCheck` is our custom check defined inside the `clang::tidy` namespace. It derives from
 `ClangTidyCheck`. We will need to provide implementations for two functions,
-`registerMatchers` and `check`:
+`registerMatchers` and `check` (remove their dummy implementations for the time being):
 
 * in `registerMatchers` we register [clang AST
   matchers](http://clang.llvm.org/docs/LibASTMatchers.html) to filter out
@@ -292,8 +292,101 @@ If you have built `clang-tidy` with
 {% endhighlight %}
 
 you will have seen that the dummy test case added by `add_new_check.py` now
-fails so we should update it to correctly reflect our intended use case.
+fails so we should update it to at least correctly reflect our intended use
+case.
 
+{% highlight cpp %}
+// RUN: $(dirname %s)/check_clang_tidy.sh %s misc-virtual-shadowing %t
+// REQUIRES: shell
+
+struct A {
+  void f() {}
+};
+
+struct B : public A {
+  // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: method hides non-virtual method from a base class [misc-virtual-shadowing]
+  virtual void f() {}  // problematic
+};
+
+struct C {
+  virtual void f() {}  // OK(1)
+};
+
+struct D : public C {
+  virtual void f() {}  // OK(2)
+};
+{% endhighlight %}
+
+Here we have added three test cases:
+
+* the line marked *problematic* is our initial problem and should trigger a
+  warning. We have specified the location of the expected warning with the
+  `CHECK-MESSAGES` macro: the warning should be on the next line (`+1`) on
+  column 3. We specified the full expected warning text.
+* the lines marked *OK(1)* and *OK(2)* should not trigger the warning since
+  they represent valid use cases; consequentlially we added no `CHECK_MESSAGES`
+  markup.
+
+We can already add the diagnostic message to `VirtualShadowingCheck::check`,
+
+{% highlight cpp %}
+// see next section
+const auto method = Result.Nodes.getNodeAs<CXXMethodDecl>("method");
+diag(method->getLocStart(),
+                "method hides non-virtual method from a base class");
+{% endhighlight %}
+
+If we rerun the test suite we will see that there is still some work left,
+
+{% highlight sh %}
+FAIL: Clang Tools :: clang-tidy/misc-virtual-shadowing.cpp (90 of 211)
+******************** TEST 'Clang Tools :: clang-tidy/misc-virtual-shadowing.cpp' FAILED ********************
+Script:
+--
+$(dirname /private/tmp/t/llvm/tools/clang/tools/extra/test/clang-tidy/misc-virtual-shadowing.cpp)/check_clang_tidy.sh /private/tmp/t/llvm/tools/clang/tools/extra/test/clang-tidy/misc-virtual-shadowing.cpp misc-virtual-shadowing /private/tmp/t/llvm/build/tools/clang/tools/extra/test/clang-tidy/Output/misc-virtual-shadowing.cpp.tmp
+--
+Exit Code: 1
+
+Command Output (stdout):
+--
+------------------------ clang-tidy output ------------------------
+3 warnings generated.
+/private/tmp/t/llvm/build/tools/clang/tools/extra/test/clang-tidy/Output/misc-virtual-shadowing.cpp.tmp.cpp:10:3: warning: method hides non-virtual method from a base class [misc-virtual-shadowing]
+  virtual void f() {}  // problematic
+  ^
+/private/tmp/t/llvm/build/tools/clang/tools/extra/test/clang-tidy/Output/misc-virtual-shadowing.cpp.tmp.cpp:14:3: warning: method hides non-virtual method from a base class [misc-virtual-shadowing]
+  virtual void f() {}  // OK(1)
+  ^
+/private/tmp/t/llvm/build/tools/clang/tools/extra/test/clang-tidy/Output/misc-virtual-shadowing.cpp.tmp.cpp:18:3: warning: method hides non-virtual method from a base class [misc-virtual-shadowing]
+  virtual void f() {}  // OK(2)
+  ^
+-------------------------------------------------------------------
+------------------------------ Fixes ------------------------------
+-------------------------------------------------------------------
+
+--
+Command Output (stderr):
+--
+/private/tmp/t/llvm/build/tools/clang/tools/extra/test/clang-tidy/Output/misc-virtual-shadowing.cpp.tmp.cpp.msg:5:115: error: CHECK-MESSAGES-NOT: string occurred!
+/private/tmp/t/llvm/build/tools/clang/tools/extra/test/clang-tidy/Output/misc-virtual-shadowing.cpp.tmp.cpp:14:3: warning: method hides non-virtual method from a base class [misc-virtual-shadowing]
+                                                                                                                  ^
+command line:1:22: note: CHECK-MESSAGES-NOT: pattern specified here
+-implicit-check-not='{{warning|error}}:'
+                     ^
+
+--
+
+********************
+Testing Time: 0.92s
+********************
+Failing Tests (1):
+    Clang Tools :: clang-tidy/misc-virtual-shadowing.cpp
+
+  Expected Passes    : 204
+  Expected Failures  : 6
+  Unexpected Failures: 1
+FAILED: cd /tmp/t/llvm/build/tools/clang/tools/extra/test && /usr/local/bin/python2.7 /tmp/t/llvm/utils/lit/lit.py -sv /tmp/t/llvm/build/tools/clang/tools/extra/test
+{% endhighlight %}
 
 
 ## Processing of base classes
@@ -308,6 +401,20 @@ const auto method = Result.Nodes.getNodeAs<CXXMethodDecl>("method");
 Here `Result.Nodes.getNodeAs<CXXMethodDecl>` returns a `CXXMethodDecl*` which
 is valid as long as the translation unit is loaded (i.e. much longer than
 `check` is running).
+
+We can already stop processing if the class containing `method` has no bases,
+
+{% highlight cpp %}
+const auto method = Result.Nodes.getNodeAs<CXXMethodDecl>("method");
+const auto cl_decl = method->getParent();
+if (cl_decl->getNumBases() == 0)
+  return;
+diag(method->getLocStart(),
+     "method hides non-virtual method from a base class");
+{% endhighlight %}
+
+Rerunning the test suite shows that now case *OK(1)* is removed, but we still
+match *OK(2)*.
 
 To check the base classes for non-virtual methods with identical names we need
 to walk the tree of bases; clang provides infrastructure to perform that walk
@@ -357,12 +464,15 @@ void VirtualShadowingCheck::check(
   const auto method = Result.Nodes.getNodeAs<CXXMethodDecl>("method");
   const auto cl_decl = method->getParent();
 
+  if (cl_decl->getNumBases() == 0)
+    return;
+
   if (not cl_decl->forallBases(CandidatePred,
                                const_cast<CXXMethodDecl *>(method)))
     return;
 
   diag(method->getLocStart(),
-       "method hides non-virtual function from a base class");
+       "method hides non-virtual method from a base class");
 }
 {% endhighlight %}
 
@@ -400,24 +510,12 @@ bool CandidatePred(const CXXRecordDecl *BaseDefinition, void *UserData) {
 {% endhighlight %}
 
 
-## Testing the check
-
-Even though I have started this post with a test case you still have not seen
-how to integrate your test cases with `clang-tidy`'s own test suite. To make
-sure our checker stays valid while clang's implementation moves on we should
-add it there (in reality this would have been our zeroth step before moving to
-the implementation, but I wanted to go directly into that first).
-
-The test suite for extra clang tools lives in
-`llvm/tools/clang/tools/extra/test/`; the test cases for `clang-tidy` are in
-the (much suprise) `clang-tidy/` subdirectory. In fact when we created the
-scaffolding code for our check with `add_new_check.py` already added a
-well-documented skeleton test case `misc-virtual-shadowing.cpp` for us. We will
-just need to add some test cases which would then be run as part of the clang
-tools test suite,
+Rerunning the test suite show that we have covered all our test cases,
 
 {% highlight sh %}
-% make check-clang-tools
+Testing Time: 0.92s
+  Expected Passes    : 205
+  Expected Failures  : 6
 {% endhighlight %}
 
 
