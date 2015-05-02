@@ -89,13 +89,13 @@ check out and build the upstream sources.
 # see http://llvm.org/docs/CMake.html#options-and-variables
 # for details on the cmake build process of LLVM
 % cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
-% make
+% make check-clang-tools
 {% endhighlight %}
 
 Make sure you add the `bin/` directory of that build to your path, e.g.
 
 {% highlight sh %}
-export PATH=$PWD/bin:$PATH
+% export PATH=$PWD/bin:$PATH
 {% endhighlight %}
 
 With that we are ready to add our custom check.
@@ -110,7 +110,7 @@ Let's change to the `clang-tidy` source directory and add our check (which we
 will aptly call `VirtualShadowingCheck`).
 
 {% highlight sh %}
-% cd llvm/tools/clang/tools/extra/clang-tidy.
+% cd ../tools/clang/tools/extra/clang-tidy.
 {% endhighlight %}
 
 We will add our tool to the `[misc]` category of `clang-tidy` checks and before
@@ -124,7 +124,12 @@ build. Thankfully there is a tool doing all of that for us:
 This will create `misc/VirtualshadowingCheck.h` and
 `misc/VirtualshadowingCheck.cpp`, and additionally include it in
 `misc/MiscTidyModule.cpp` so it can be run as a normal part of `clang-tidy`.
-We can now build a version of `clang-tidy` including our checker by rebuild llvm and tools. To run it on some code we would run
+As of `clang-tools-extra` svn revision `236309` (git commit `6a5bbb2`) we still
+need to modify `misc/CMakeLists.txt` so that our newly added dependency
+`VirtualShadowingCheck.cpp` comes before the `LINK_LIBS` line.
+
+We can now build a version of `clang-tidy` including our checker by rebuild
+llvm and tools. To run it on some code we would run
 
 {% highlight sh %}
 % clang-tidy -checks='-*,misc-virtual-shadowing' some/file.cpp
@@ -180,25 +185,10 @@ implementation strategy will be
 
 Clang comes with [a large set of basic
 matchers](http://clang.llvm.org/docs/LibASTMatchersReference.html) for many use
-cases. Chaining them allows creating powerful matchers. As luck would have it 
-a matcher for `virtual` method `isVirtual` is already available.
-
-Coming back to our original "problematic" sample we can confirm that
-`isVirtual` matches `B::f`,
-
-{% highlight sh %}
-% clang-query problematic.cpp --
-clang-query> match isVirtual()
-
-Match #1:
-
-/tmp/problematic.cpp:6:9: note: "root" binds here
-        virtual void f() {}
-        ^~~~~~~~~~~~~~~~~~~
-{% endhighlight %}
+cases. Chaining them allows creating powerful matchers.
 
 To get a feeling for the kind of AST node representing `B::f` looking at the
-clang AST is also helpful,
+clang AST is helpful,
 
 {% highlight cpp linenos %}
 % clang-check -ast-dump problematic.cpp --
@@ -225,17 +215,85 @@ encode both classes and structs; the two definitions of `f` in lines 8 and 13
 encoded as `CXXMethodDecl`s which encapsulate (not much suprisingly)
 declarations of methods in C++.
 
+The filter we need would first need method declarations and then then refine
+that to only methods declared `virtual`. As first filter we use the
+`methodDecl` matcher,
+
+{% highlight sh %}
+% clang-query problematic.cpp --
+clang-query> match methodDecl()
+
+/tmp/problematic.cpp:8:3: note: "root" binds here
+  virtual void f() {}  // problematic
+  ^~~~~~~~~~~~~~~~~~~
+1 match.
+clang-query> match methodDecl()
+
+Match #1:
+
+/tmp/problematic.cpp:4:3: note: "root" binds here
+  void f() {}
+  ^~~~~~~~~~~
+
+Match #2:
+
+/tmp/problematic.cpp:8:3: note: "root" binds here
+  virtual void f() {}  // problematic
+  ^~~~~~~~~~~~~~~~~~~
+
+Match #3:
+
+
+Match #4:
+
+/tmp/problematic.cpp:7:8: note: "root" binds here
+struct B : public A {
+       ^
+4 matches.
+{% endhighlight %}
+
+which 4 finds all the {CXXMethodDecl} (two for our explicitly declared methods
+`f` and two for implicitly declared methods).
+
+We chain that with the `isVirtual` matcher to only match virtual methods,
+
+{% highlight sh %}
+% clang-query problematic.cpp --
+clang-query> match methodDecl(isVirtual())
+
+/tmp/problematic.cpp:8:3: note: "root" binds here
+  virtual void f() {}  // problematic
+  ^~~~~~~~~~~~~~~~~~~
+1 match.
+{% endhighlight %}
+
+which finds just the method we are interested in.
+
+
 All left for us to do is to update the definition of
 `VirtualShadowingCheck::registerMatchers` in `misc/VirtualShadowingCheck.cpp`
 so it matches `virtual` method declarations,
 
 {% highlight cpp %}
 void VirtualShadowingCheck::registerMatchers(MatchFinder *Finder) {
-  Finder->addMatcher(isVirtual().bind("method"), this);
+  Finder->addMatcher(methodDecl(isVirtual()).bind("method"), this);
 }
 {% endhighlight %}
 
-This binds the identifier `method` to any found match.
+This binds the identifier `method` to the found method.
+
+
+## Testing the check
+
+If you have built `clang-tidy` with
+
+{% highlight sh %}
+% make check-clang-tools
+{% endhighlight %}
+
+you will have seen that the dummy test case added by `add_new_check.py` now
+fails so we should update it to correctly reflect our intended use case.
+
 
 
 ## Processing of base classes
