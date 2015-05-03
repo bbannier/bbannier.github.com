@@ -2,7 +2,7 @@
 baseurl: "" # the subpath of your site, e.g. /blog/
 url: "http://bbannier.github.io" # the base hostname & protocol for your site
 
-permalink: /blog/:gategories/:year/:month/:day/:title.html
+permalink: /blog/:categories/:year/:month/:day/:title.html
 
 # THEME-SPECIFIC CONFIGURATION
 theme:
