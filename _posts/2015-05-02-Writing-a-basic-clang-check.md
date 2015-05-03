@@ -51,7 +51,7 @@ class `B`.
 
 ## Setting up needed tools
 
-We will write our check as an extension of [the `clang-tidy`
+We will write our check as an extension of the [`clang-tidy`
 tool](http://clang.llvm.org/extra/clang-tidy.html) which is part of clang.
 
 If we have a [compilation
@@ -109,7 +109,7 @@ Let's change to the `clang-tidy` source directory and add our check (which we
 will aptly call `VirtualShadowingCheck`).
 
 {% highlight sh %}
-% cd ../tools/clang/tools/extra/clang-tidy.
+% cd ../tools/clang/tools/extra/clang-tidy
 {% endhighlight %}
 
 We will add our tool to the `[misc]` category of `clang-tidy` checks and before
@@ -120,14 +120,14 @@ build. Thankfully there is a tool doing all of that for us:
 % ./add_new_check.py misc virtual-shadowing
 {% endhighlight %}
 
-This will create `misc/VirtualshadowingCheck.h` and
-`misc/VirtualshadowingCheck.cpp`, and additionally include it in
+This will create `misc/VirtualShadowingCheck.h` and
+`misc/VirtualShadowingCheck.cpp`, and additionally include it in
 `misc/MiscTidyModule.cpp` so it can be run as a normal part of `clang-tidy`.
 As of `clang-tools-extra` svn revision `236309` (git commit `6a5bbb2`) we still
 need to modify `misc/CMakeLists.txt` so that our newly added dependency
 `VirtualShadowingCheck.cpp` comes before the `LINK_LIBS` line.
 
-We can now build a version of `clang-tidy` including our checker by rebuild
+We can now create a version of `clang-tidy` including our checker by rebuilding
 llvm and tools. To run it on some code we would run
 
 {% highlight sh %}
@@ -167,14 +167,14 @@ Here `VirtualShadowingCheck` is our custom check defined inside the `clang::tidy
   matchers](http://clang.llvm.org/docs/LibASTMatchers.html) to filter out
   intesting source locations, and
 * with `check` we provide a function which is called by the clang machinery
-  whenever a match was found and we can perform further actions (e.g. emit a
+  whenever a match was found; we can perform further actions here (e.g. emit a
   warning).
 
-In our case we want for any `virtual` method of some class check
-whether any of the class' bases defined a method with the same name, so our
-implementation strategy will be
+In our case we want tp check for any `virtual` method of some class whether any
+of the class' bases defined a method with the same name, and our implementation
+strategy will be
 
-* filter out declarations of virtual methods with a matcher registered in
+* filter out declarations of any virtual method with a matcher registered in
   `registerMatchers`, and
 * walk the bases of the matched class in `check` and compare to the matched
   `virtual` method.
@@ -214,8 +214,8 @@ encode both classes and structs; the two definitions of `f` in lines 8 and 13
 encoded as `CXXMethodDecl`s which encapsulate (not much suprisingly)
 declarations of methods in C++.
 
-The filter we need would first need method declarations and then then refine
-that to only methods declared `virtual`. As first filter we use the
+The filter we need would first need to ctahc method declarations and then then
+refine that to only methods declared `virtual`. As first filter we use the
 `methodDecl` matcher,
 
 {% highlight sh %}
@@ -279,7 +279,7 @@ void VirtualShadowingCheck::registerMatchers(MatchFinder *Finder) {
 }
 {% endhighlight %}
 
-This binds the identifier `method` to the found method.
+This binds the identifier `method` to the found method (note its placement with respect to the parentheses).
 
 
 ## Testing the check
