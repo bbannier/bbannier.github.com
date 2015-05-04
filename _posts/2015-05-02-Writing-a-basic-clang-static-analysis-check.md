@@ -1,6 +1,7 @@
 ---
 layout: post
-title: Writing a basic clang check
+title: Writing a basic clang static analysis check
+redirect_from: /blog/2015/05/02/Writing-a-basic-clang-check.html
 ---
 
 [Clang](http://clang.llvm.org) provides a user-friendly framework for writing
