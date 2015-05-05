@@ -171,7 +171,7 @@ Here `VirtualShadowingCheck` is our custom check defined inside the `clang::tidy
   whenever a match was found; we can perform further actions here (e.g. emit a
   warning).
 
-In our case we want tp check for any `virtual` method of some class whether any
+In our case we want to check for any `virtual` method of some class whether any
 of the class' bases defined a method with the same name, and our implementation
 strategy will be
 
@@ -215,7 +215,7 @@ encode both classes and structs; the two definitions of `f` in lines 8 and 13
 encoded as `CXXMethodDecl`s which encapsulate (not much suprisingly)
 declarations of methods in C++.
 
-The filter we need would first need to ctahc method declarations and then then
+The filter we need would first need to catch method declarations and then then
 refine that to only methods declared `virtual`. As first filter we use the
 `methodDecl` matcher,
 
