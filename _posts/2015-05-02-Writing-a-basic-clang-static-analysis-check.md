@@ -437,10 +437,19 @@ typedef bool ForallBasesCallback(const CXXRecordDecl *BaseDefinition,
 
 and `BaseDefinition` a `CXXRecordDecl` pointing to the declaration of a base
 class. `UserData` can point to something we could use to pass additional
-information along.  With `AllowShortCircuit = true` the callback will be called
+information along[^1].  With `AllowShortCircuit = true` the callback will be called
 for all bases as long the callback returns `true`; for `AllowShortCircuit =
 false` all bases would be walked. If the class has no bases
 `CXXRecordDecl::forallBases` returns `false`.
+
+[^1]: In the development version clang-3.8 the signature changed and `UserData`
+    got dropped,
+
+        bool CXXRecordDecl::forallBases(ForallBasesCallback *BaseMatches, bool AllowShortCircuit = true)
+
+    Now `ForallBasesCallback` is a callable taking a `const CXXRecordDecl*` as
+    only argument. To pass additional data along one can explicitly (and in a
+    type-safe manner) capture data with a lambda closure.
 
 We can use this to recursively walk the tree of bases. We will pass a pointer
 to `method` as `Userdata` to perform checks on the name. Inside
