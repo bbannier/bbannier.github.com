@@ -217,17 +217,17 @@ declarations of methods in C++.
 
 The filter we need would first need to catch method declarations and then then
 refine that to only methods declared `virtual`. As first filter we use the
-`methodDecl` matcher,
+`cxxMethodDecl` matcher,
 
 {% highlight sh %}
 % clang-query problematic.cpp --
-clang-query> match methodDecl()
+clang-query> match cxxMethodDecl()
 
 /tmp/problematic.cpp:8:3: note: "root" binds here
   virtual void f() {}  // problematic
   ^~~~~~~~~~~~~~~~~~~
 1 match.
-clang-query> match methodDecl()
+clang-query> match cxxMethodDecl()
 
 Match #1:
 
@@ -259,7 +259,7 @@ We chain that with the `isVirtual` matcher to only match virtual methods,
 
 {% highlight sh %}
 % clang-query problematic.cpp --
-clang-query> match methodDecl(isVirtual())
+clang-query> match cxxMethodDecl(isVirtual())
 
 /tmp/problematic.cpp:8:3: note: "root" binds here
   virtual void f() {}  // problematic
@@ -276,7 +276,7 @@ so it matches `virtual` method declarations,
 
 {% highlight cpp %}
 void VirtualShadowingCheck::registerMatchers(MatchFinder *Finder) {
-  Finder->addMatcher(methodDecl(isVirtual()).bind("method"), this);
+  Finder->addMatcher(cxxMethodDecl(isVirtual()).bind("method"), this);
 }
 {% endhighlight %}
 
