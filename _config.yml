@@ -42,7 +42,6 @@ theme:
   xing: "Benjamin_bannier"
 
   # Scripts
-  disqus_shortname: "bbannier"
   katex: true # Enable if using math markup
 
   # Localization strings
