@@ -42,7 +42,6 @@ theme:
   xing: "Benjamin_bannier"
 
   # Scripts
-  google_analytics: "UA-60230498-1" # Tracking ID, e.g. "UA-000000-01"
   disqus_shortname: "bbannier"
   katex: true # Enable if using math markup
 
